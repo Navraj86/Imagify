@@ -29,7 +29,7 @@ const Result = () => {
     <motion.form initial={{ opacity: 0.2, y: 100 }} transition={{ duration: 1 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} onSubmit={onSubmitHandler} className='flex flex-col min-h-[90vh] justify-center items-center'>
       <div>
         <div className="relative">
-          <img src={image} alt="" className='max-w-sm rounded' />
+          <img src={image} alt="" className='max-w-sm max-sm:max-w-xs rounded' />
           <span className={`absolute bottom-0 left-0 h-1 bg-blue-500 ${Loading ? 'w-full transition-all duration-[10s]' : 'w-0'}`} />
         </div>
         <p className={!Loading ? 'hidden' : ''}>Loading.....</p>
