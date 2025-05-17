@@ -5,10 +5,16 @@ import razorpay from "razorpay";
 import transactionModel from "../models/transaction.model.js";
 
 const registerUser = async (req, res) => {
-    const session = mongoose.startSession();
-    session.startTransaction();
     try {
         const { name, email, password } = req.body;
+
+        const existingUser = await userModel.findOne({ email })
+
+        if (existingUser) {
+            const error = new Error('User already exists');
+            error.statusCode = 409;
+            throw error;
+        }
 
         if (!name || !email || !password) {
             return res.status(400).json({ success: false, message: "Please fill all the fields" });
@@ -24,12 +30,9 @@ const registerUser = async (req, res) => {
         }
 
         const newUser = new userModel(userData);
-        const user = await newUser.save({ session });
+        const user = await newUser.save();
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
-
-        await session.commitTransaction();
-        session.endSession();
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
 
         res.status(201).json({
             success: true,
@@ -43,8 +46,6 @@ const registerUser = async (req, res) => {
 
     } catch (error) {
         console.log(error);
-        session.abortTransaction();
-        session.endSession();
         res.status(500).json({
             success: false,
             message: `Server error: ${error.message}`
