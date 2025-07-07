@@ -48,6 +48,7 @@ temp/
 .tsbuildinfo
 .vite/
 .cache/
+.unlighthouse/
 
 # Local configs
 *.local

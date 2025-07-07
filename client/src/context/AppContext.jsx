@@ -28,7 +28,7 @@ const AppContextProvider = ({ children }) => {
                 setUser(data.user);
             }
         } catch (error) {
-            if (error.message === 'jwt expired') {
+            if (error.message === 'Server error: jwt expired') {
                 console.log(error);
             } else {
                 console.log(error);
