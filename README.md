@@ -75,3 +75,113 @@ Imagify/
 │   ├── package.json
 │   └── vercel.json           # Serverless deployment configuration
 └── README.md
+```
+
+---
+
+## ⚙️ Getting Started
+
+### Prerequisites
+
+Make sure you have installed:
+- [Node.js](https://nodejs.org/) (v18.x or later recommended)
+- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
+- [MongoDB URI](https://cloud.mongodb.com/) (MongoDB Atlas or local instance)
+
+---
+
+### Installation & Local Setup
+
+#### 1. Clone the repository
+```bash
+git clone https://github.com/Navraj86/Imagify.git
+cd Imagify
+```
+
+#### 2. Backend Setup
+```bash
+cd server
+npm install
+```
+
+Create a `.env` file in the `server` directory:
+```env
+PORT=5000
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_super_secret_jwt_key
+
+# AI Image Generation API Key (e.g., ClipDrop)
+CLIPDROP_API=your_clipdrop_api_key
+
+# Payment Gateway (if enabled)
+RAZORPAY_KEY_ID=your_razorpay_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+```
+
+Start the backend server:
+```bash
+# Development mode
+npm run dev
+# OR production mode
+npm start
+```
+*Backend will run on `http://localhost:5000`.*
+
+---
+
+#### 3. Frontend Setup
+In a new terminal window:
+```bash
+cd ../client
+npm install
+```
+
+Create a `.env` file in the `client` directory:
+```env
+VITE_BACKEND_URL=http://localhost:5000
+# Optional payment public keys
+VITE_RAZORPAY_KEY_ID=your_razorpay_key_id
+```
+
+Start the Vite development server:
+```bash
+npm run dev
+```
+*Frontend will run on `http://localhost:5173`.*
+
+---
+
+## 📡 API Endpoints Overview
+
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :---: |
+| `POST` | `/api/user/register` | Register a new user account | No |
+| `POST` | `/api/user/login` | Log in and receive JWT token | No |
+| `GET` | `/api/user/credits` | Fetch available user credits | Yes |
+| `POST` | `/api/image/generate-image` | Generate an image from prompt | Yes |
+| `POST` | `/api/user/pay-razor` | Create order for credit pack | Yes |
+| `POST` | `/api/user/verify-razor` | Verify payment & credit account | Yes |
+
+---
+
+## 🚀 Deployment
+
+- **Frontend:** Easily deployed to [Vercel](https://vercel.com/) by importing the `/client` directory (Build command: `npm run build`, Output directory: `dist`).
+- **Backend:** Configured for Vercel Serverless Functions via `server/vercel.json` or can be deployed to platforms like [Render](https://render.com/), [Railway](https://railway.app/), or [Heroku](https://www.heroku.com/).
+
+---
+
+## 🤝 Contributing
+
+Contributions are always welcome!
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+Distributed under the **MIT License**. See `LICENSE` for more information.
