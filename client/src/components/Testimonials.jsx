@@ -1,30 +1,53 @@
-import { motion } from 'motion/react';
-import { assets, testimonialsData } from '../assets/assets';
+'use client';
+
+import Image from 'next/image';
+import { m } from 'motion/react';
+import { Quote, Star } from 'lucide-react';
+import { testimonialsData } from '@/assets/assets';
+import { fadeUp } from '@/lib/motion';
+import SectionHeading from '@/components/SectionHeading';
+import { Avatar } from '@/components/ui/avatar';
+import { Card } from '@/components/ui/card';
 
 const Testimonials = () => {
   return (
-    <motion.div initial={{ opacity: 0.2, y: 100 }} transition={{ duration: 1 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className='flex flex-col items-center justify-center my-20 py-12'>
-        <h1 className='text-3xl sm:text-4xl font-semibold mb-2'>Customer testimonials</h1>
-        <p className='text-gray-500 mb-12'>What Our Users Are Saying</p>
+    <section className='py-24'>
+        <m.div {...fadeUp}>
+          <SectionHeading
+            eyebrow='Testimonials'
+            title={<>What people <span className='font-serif font-normal italic text-gradient pr-1'>say</span></>}
+          />
+        </m.div>
 
-        <div className='flex flex-wrap gap-6'>
+        <div className='mt-16 grid gap-4 md:grid-cols-3'>
           {testimonialsData.map((testimonial, index) => (
-            <div key={index} className='bg-white/20 p-12 rounded-lg shadow-md border w-80 m-auto cursor-pointer hover:scale-[1.02] transition-all'>
-              <div className='flex flex-col items-center'>
-                <img src={testimonial.image} alt="" className='rounded-full w-14' />
-                <h2 className='text-xl font-semibold mt-3'>{testimonial.name}</h2>
-                <p className='text-gray-500 mb-4'>{testimonial.role}</p>
-                <div className='flex mb-4'>
-                  {Array(testimonial.stars).fill().map((item, index) => (
-                    <img key={index} src={assets.rating_star} alt='' />
-                  ))}
-                </div>
-                <p className='text-center text-sm text-gray-600'>{testimonial.text}</p>
-              </div>
-            </div>
+            <m.div key={index} {...fadeUp} transition={{ ...fadeUp.transition, delay: index * 0.1 }}>
+              <Card className='h-full gap-0 p-6 transition hover:ring-white/20 sm:p-8'>
+                <figure className='flex h-full flex-col'>
+                  <Quote className='size-6 text-fuchsia-300/60' />
+                  <blockquote className='mt-4 flex-1 text-pretty text-[15px] leading-relaxed text-zinc-300'>
+                    {testimonial.text}
+                  </blockquote>
+                  <div className='mt-6 flex gap-0.5' aria-label={`${testimonial.stars} out of 5 stars`}>
+                    {Array(5).fill('').map((_, starIndex) => (
+                      <Star key={starIndex} className={starIndex < testimonial.stars ? 'size-4 fill-amber-400 text-amber-400' : 'size-4 text-zinc-700'} />
+                    ))}
+                  </div>
+                  <figcaption className='mt-6 flex items-center gap-3 border-t border-white/10 pt-6'>
+                    <Avatar className='size-10'>
+                      <Image src={testimonial.image} alt={testimonial.name} className='size-full object-cover' />
+                    </Avatar>
+                    <div>
+                      <p className='text-sm font-medium text-white'>{testimonial.name}</p>
+                      <p className='text-xs text-muted-foreground'>{testimonial.role}</p>
+                    </div>
+                  </figcaption>
+                </figure>
+              </Card>
+            </m.div>
           ))}
         </div>
-    </motion.div>
+    </section>
   )
 };
 
