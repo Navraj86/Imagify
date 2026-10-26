@@ -1,57 +1,31 @@
-import logo from './logo.svg'
-import logo_icon from './logo_icon.svg'
-import facebook_icon from './facebook_icon.svg'
-import instagram_icon from './instagram_icon.svg'
-import twitter_icon from './twitter_icon.svg'
-import star_icon from './star_icon.svg'
-import rating_star from './rating_star.svg'
+import { PenLine, WandSparkles, Download } from 'lucide-react'
 import sample_img_1 from './sample_img_1.png'
 import sample_img_2 from './sample_img_2.png'
 import profile_img_1 from './profile_img_1.png'
 import profile_img_2 from './profile_img_2.png'
-import step_icon_1 from './step_icon_1.svg'
-import step_icon_2 from './step_icon_2.svg'
-import step_icon_3 from './step_icon_3.svg'
-import email_icon from './email_icon.svg'
-import lock_icon from './lock_icon.svg'
-import cross_icon from './cross_icon.svg'
-import star_group from './star_group.png'
-import credit_star from './credit_star.svg'
-import profile_icon from './profile_icon.png'
 
 export const assets = {
-    logo,
-    logo_icon,
-    facebook_icon,
-    instagram_icon,
-    twitter_icon,
-    star_icon,
-    rating_star,
     sample_img_1,
     sample_img_2,
-    email_icon,
-    lock_icon,
-    cross_icon,
-    star_group,
-    credit_star,
-    profile_icon
+    profile_img_1,
+    profile_img_2,
 }
 
 export const stepsData = [
     {
-      title: 'Describe Your Vision',
-      description: 'Type a phrase, sentence, or paragraph that describes the image you want to create.',
-      icon: step_icon_1,
+      title: 'Write a prompt',
+      description: 'Describe the image you want in a phrase, a sentence or a whole paragraph.',
+      icon: PenLine,
     },
     {
-      title: 'Watch the Magic',
-      description: 'Our AI-powered engine will transform your text into a high-quality, unique image in seconds.',
-      icon: step_icon_2,
+      title: 'Generate',
+      description: 'Imagify turns your prompt into an image. It usually takes a few seconds.',
+      icon: WandSparkles,
     },
     {
-      title: 'Download & Share',
-      description: 'Instantly download your creation or share it with the world directly from our platform.',
-      icon: step_icon_3,
+      title: 'Download',
+      description: 'Save the image as a PNG and use it wherever you need it.',
+      icon: Download,
     },
   ];
 
@@ -61,21 +35,21 @@ export const testimonialsData = [
         name:'Donald Jackman',
         role:'Graphic Designer',
         stars:5,
-        text:`I've been using bg.removal for nearly two years, primarily for Instagram, and it has been incredibly user-friendly, making my work much easier.`
+        text:`I use it to sketch out ideas before I open a design tool. The results are usually close to what I had in mind.`
     },
     {
         image:profile_img_2,
         name:'Richard Nelson',
         role:'Content Creator',
         stars:4,
-        text:`I've been using bg.removal for nearly two years, primarily for Instagram, and it has been incredibly user-friendly, making my work much easier.`
+        text:`I make thumbnails with it every week. I like that I only pay for the images I generate.`
     },
     {
         image:profile_img_1,
         name:'Donald Jackman',
-        role:' Graphic Designer',
+        role:'Graphic Designer',
         stars:5,
-        text:`I've been using bg.removal for nearly two years, primarily for Instagram, and it has been incredibly user-friendly, making my work much easier.`
+        text:`Easy to pick up. I type what I want, choose a style and download it.`
     },
 ]
 
@@ -90,7 +64,8 @@ export const plans = [
       id: 'Advanced',
       price: 50,
       credits: 500,
-      desc: 'Best for business use.'
+      desc: 'Best for business use.',
+      popular: true
     },
     {
       id: 'Business',
@@ -99,3 +74,20 @@ export const plans = [
       desc: 'Best for enterprise use.'
     },
   ]
+
+export const promptIdeas = [
+    'A furry monster chef baking a birthday cake',
+    'Neon-lit Tokyo street in the rain, cinematic, 35mm',
+    'Cozy cabin in snowy mountains at golden hour',
+    'Isometric floating island with waterfalls, soft pastel',
+]
+
+// Appended to the prompt when selected in the studio
+export const stylePresets = [
+    { id: 'none', label: 'No style', suffix: '' },
+    { id: 'photo', label: 'Photo', suffix: 'photorealistic, highly detailed, natural lighting' },
+    { id: '3d', label: '3D', suffix: '3D render, Pixar style, soft studio lighting' },
+    { id: 'anime', label: 'Anime', suffix: 'anime style, vibrant colors, cel shading' },
+    { id: 'watercolor', label: 'Watercolor', suffix: 'watercolor painting, soft textures, paper grain' },
+    { id: 'cinematic', label: 'Cinematic', suffix: 'cinematic lighting, dramatic composition, 35mm film' },
+]

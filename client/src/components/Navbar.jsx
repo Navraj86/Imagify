@@ -1,43 +1,82 @@
-import { useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+'use client';
 
-import { AppContext } from '../context/AppContext';
-import { assets } from '../assets/assets';
+import { useContext, useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
+import { AppContext } from '@/context/AppContext';
+import { cn } from '@/lib/utils';
+import Logo from '@/components/Logo';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const navLinks = [
+  { label: 'How it works', href: '/#how-it-works' },
+  { label: 'Features', href: '/#features' },
+  { label: 'Studio', href: '/result' },
+  { label: 'Pricing', href: '/buy' },
+];
+
+const AuthSkeleton = () => (
+  <div className='flex items-center gap-2'>
+    <Skeleton className='hidden h-9 w-28 rounded-full sm:block' />
+    <Skeleton className='size-9 rounded-full' />
+  </div>
+);
+
+// Split out of the initial bundle: the account menu only matters when signed in, the sheet only on mobile
+const AccountMenu = dynamic(() => import('@/components/AccountMenu'), { ssr: false, loading: AuthSkeleton });
+const MobileMenu = dynamic(() => import('@/components/MobileMenu'), {
+  ssr: false,
+  loading: () => <span aria-hidden className='size-9 md:hidden' />,
+});
 
 const Navbar = () => {
-  const { user, setShowLogin, logout, credit } = useContext(AppContext);
-  const navigate = useNavigate();
+  const { user, authLoading, openAuth } = useContext(AppContext);
+  const pathname = usePathname();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   return (
-    <div className='flex items-center justify-between py-4'>
-      <Link to='/'>
-        <img src={assets.logo} alt="" className='w-28 sm:w-32 lg:w-40' />
-      </Link>
+    <header className={cn('sticky top-0 z-40 border-b transition-colors duration-300', scrolled ? 'border-white/10 bg-background/70 backdrop-blur-xl' : 'border-transparent')}>
+      <nav className='mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6'>
+        <Logo />
 
-      <div>
-        {user ? 
-        <div className='flex items-center gap-2 sm:gap-3'>
-          <button onClick={() => navigate('/buy')} className='flex items-center gap-2 bg-blue-100 px-4 sm:px-6 py-1.5 sm:py-3 rounded-full hover:scale-105 transition-all duration-700'>
-            <img src={assets.credit_star} alt="" className='w-5' />
-            <p className='text-xs sm:text-sm font-medium text-gray-600'>Credits Left: {credit}</p>
-          </button>
-          <p className='text-gray-600 max-sm:hidden pl-4'>Hi, {user.name}</p>
-          <div className='relative group'>
-            <img src={assets.profile_icon} alt="" className='w-10 drop-shadow' />
-            <div className='absolute hidden group-hover:block top-0 right-0 z-10 text-black rounded pt-12'>
-              <ul className='list-none m-0 p-2 bg-white rounded-md border text-sm'>
-                <li onClick={logout} className='py-1 px-2 cursor-pointer pr-10'>Logout</li>
-              </ul>
-            </div>
-          </div>
-        </div> : 
-        <div className='flex items-center gap-4 sm:gap-5'>
-          <p onClick={() => navigate('/buy')} className='cursor-pointer'>Pricing</p>
-          <button onClick={() => setShowLogin(true)} className='bg-zinc-800 text-white px-7 py-2 sm:px-10 text-sm rounded-full'>Login</button>
+        <div className='hidden items-center gap-1 md:flex'>
+          {navLinks.map((link) => (
+            <Link
+              key={link.label}
+              href={link.href}
+              className={cn('rounded-full px-3 py-1.5 text-sm transition', pathname === link.href ? 'bg-white/5 text-white' : 'text-muted-foreground hover:text-white')}
+            >
+              {link.label}
+            </Link>
+          ))}
         </div>
-        }
-      </div>
-    </div>
+
+        <div className='flex items-center gap-2'>
+          {authLoading ?
+            <AuthSkeleton />
+          : user ?
+            <AccountMenu />
+          :
+            <>
+              <Button variant='ghost' className='hidden h-9 rounded-full px-4 sm:inline-flex' onClick={() => openAuth('Login')}>Sign in</Button>
+              <Button className='h-9 rounded-full px-4' onClick={() => openAuth('Sign Up', '/result')}>Get started</Button>
+            </>
+          }
+
+          <MobileMenu links={navLinks} />
+        </div>
+      </nav>
+    </header>
   )
 };
 

@@ -21,11 +21,14 @@ const transactionSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    orderId: {
+        type: String,
+    },
     date: {
         type: Number
     }
 });
 
-const transactionModel = mongoose.model.transaction || mongoose.model("transaction", transactionSchema);
+const transactionModel = mongoose.models.transaction || mongoose.model("transaction", transactionSchema);
 
 export default transactionModel;
