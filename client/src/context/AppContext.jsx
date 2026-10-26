@@ -25,7 +25,8 @@ const AppContextProvider = ({ children }) => {
     const hydrated = useSyncExternalStore(noopSubscribe, () => true, () => false);
     const authLoading = !hydrated || (!!token && !user && !authChecked);
 
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+    // Trailing slash stripped so "https://api.example.com/" doesn't produce "//api/..." URLs
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/+$/, '');
 
     const router = useRouter();
 
