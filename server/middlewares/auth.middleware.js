@@ -1,26 +1,25 @@
 import jwt from 'jsonwebtoken';
 
-const userAuth = async (req, res, next) => {
+const userAuth = (req, res, next) => {
     const { token } = req.headers;
 
     if (!token) {
-        return res.status(401).json({ success: false, message: "Unauthorized" });
+        return res.status(401).json({ success: false, message: "Please sign in to continue." });
     }
 
     try {
         const tokenDecode = jwt.verify(token, process.env.JWT_SECRET);
-        if (tokenDecode.id) {
-            if (!req.body) req.body = {};
-            req.body.userId = tokenDecode.id;
-        } else {
-            return res.status(401).json({ success: false, message: "Unauthorized" });
+        if (!tokenDecode.id) {
+            return res.status(401).json({ success: false, message: "Invalid session. Please sign in again." });
         }
+        // Attach to the request itself rather than req.body, which GET requests don't have
+        req.userId = tokenDecode.id;
         next();
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: `Server error: ${error.message}`
-        });
+        const message = error.name === 'TokenExpiredError'
+            ? "Your session has expired. Please sign in again."
+            : "Invalid session. Please sign in again.";
+        return res.status(401).json({ success: false, message });
     }
 };
 
