@@ -46,7 +46,14 @@ Type a prompt, get a 1024×1024 image in seconds, and buy more credits when you 
 <img src="docs/screenshots/mobile.png" alt="Home, studio and pricing on a phone" width="700">
 </details>
 
-**Studio features:** style presets (Photo, 3D, Anime, Watercolor, Cinematic), one-click prompt ideas, a live progress state, one-click PNG download, copy prompt, and a strip of recent generations for the session.
+**Studio features:** style presets (Photo, 3D, Anime, Watercolor, Cinematic), one-click prompt ideas and a "Surprise me" button, a live progress state, one-click PNG download, copy prompt, and the last 12 generations of the session.
+
+| Plan | Credits | Price (INR) | Per image |
+| :--- | ---: | ---: | ---: |
+| Free (on sign-up) | 5 | 0 | – |
+| Basic | 100 | ₹10 | ₹0.10 |
+| Advanced | 500 | ₹50 | ₹0.10 |
+| Business | 5,000 | ₹250 | ₹0.05 |
 
 ## Architecture
 
@@ -151,7 +158,7 @@ erDiagram
 **Money and credits**
 - **No double spending.** Credits are deducted with one atomic, conditional `findOneAndUpdate`, so ten parallel requests with one credit produce one image, not ten.
 - **Failed generations are free.** The reserved credit is refunded on any ClipDrop error or timeout.
-- **Server-side pricing.** Plans live on the server; the client only sends a plan id (checked with `Object.hasOwn`, so `__proto__` style keys can't slip through).
+- **Server-side pricing.** Plans live in `server/controllers/user.controller.js`; the client only sends a plan id (checked with `Object.hasOwn`, so `__proto__` style keys can't slip through). The list in `client/src/assets/assets.js` is display-only and must be kept in sync.
 - **Payment verification in depth.** Timing-safe HMAC signature check, then the order and payment are fetched from Razorpay and the amounts compared. Authorized-but-uncaptured payments are captured so customers are never charged without receiving credits.
 - **Idempotent crediting.** A transaction flips from unpaid to paid atomically, so retries or duplicate callbacks add credits only once.
 
@@ -168,16 +175,16 @@ erDiagram
 
 ## API
 
-| Method | Endpoint | Purpose | Auth |
-| :--- | :--- | :--- | :---: |
-| `POST` | `/api/user/register` | Create an account (gets 5 credits) | |
-| `POST` | `/api/user/login` | Log in, returns a JWT | |
-| `GET` | `/api/user/credits` | Current credit balance | ✅ |
-| `POST` | `/api/image/generate-image` | Generate an image from a prompt | ✅ |
-| `POST` | `/api/user/pay-razor` | Create a Razorpay order for a plan | ✅ |
-| `POST` | `/api/user/verify-razor` | Verify the payment and add credits | ✅ |
+| Method | Endpoint | Body | Purpose | Auth |
+| :--- | :--- | :--- | :--- | :---: |
+| `POST` | `/api/user/register` | `name`, `email`, `password` | Create an account (password ≥ 8 chars, gets 5 credits) | |
+| `POST` | `/api/user/login` | `email`, `password` | Log in, returns a JWT | |
+| `GET` | `/api/user/credits` | | Current credit balance | ✅ |
+| `POST` | `/api/image/generate-image` | `prompt` | Generate an image from a prompt | ✅ |
+| `POST` | `/api/user/pay-razor` | `planId` (`Basic`, `Advanced`, `Business`) | Create a Razorpay order for a plan | ✅ |
+| `POST` | `/api/user/verify-razor` | `razorpay_order_id`, `razorpay_payment_id`, `razorpay_signature` | Verify the payment and add credits | ✅ |
 
-Authenticated routes expect the JWT in a `token` header. All responses are JSON shaped as `{ success, message, ... }`.
+Authenticated routes expect the JWT in a `token` header. All responses are JSON shaped as `{ success, message, ... }`, and request bodies are limited to 10 KB.
 
 ## Project structure
 
@@ -222,7 +229,7 @@ npm run dev
 | Variable | Description |
 | :--- | :--- |
 | `PORT` | API port, default `4000` |
-| `MONGODB_URI` | MongoDB connection string |
+| `MONGODB_URI` | MongoDB connection string (the `imagify` database is selected automatically) |
 | `JWT_SECRET` | Any long random string |
 | `JWT_EXPIRES_IN` | Session length, e.g. `7d` |
 | `CLIPDROP_API` | ClipDrop API key |
