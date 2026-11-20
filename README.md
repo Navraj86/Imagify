@@ -1,202 +1,281 @@
+<div align="center">
+
 # Imagify
 
-[![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![shadcn/ui](https://img.shields.io/badge/shadcn%2Fui-000000?logo=shadcnui&logoColor=white)](https://ui.shadcn.com/)
-[![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)](https://expressjs.com/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose_8-47A248?logo=mongodb&logoColor=white)](https://mongoosejs.com/)
-[![Razorpay](https://img.shields.io/badge/Payments-Razorpay-0C2451?logo=razorpay&logoColor=white)](https://razorpay.com/)
-[![Vercel](https://img.shields.io/badge/Deployed_on-Vercel-000000?logo=vercel&logoColor=white)](https://imagify-nu-six.vercel.app)
+**Text-to-image SaaS with pay-as-you-go credits.**
+Type a prompt, get a 1024×1024 image in seconds, and buy more credits when you run out.
 
-Imagify turns text prompts into images. You sign up, get 5 free credits, describe what you want, and download the result. When you run out, you can buy more credits through Razorpay.
+[![Live demo](https://img.shields.io/badge/Live_demo-imagify--nu--six.vercel.app-d946ef?style=for-the-badge)](https://imagify-nu-six.vercel.app)
 
-**Live demo:** [imagify-nu-six.vercel.app](https://imagify-nu-six.vercel.app)
+![Next.js](https://img.shields.io/badge/Next.js_16-000?logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React_19-20232a?logo=react&logoColor=61dafb)
+![Tailwind](https://img.shields.io/badge/Tailwind_v4-0b1120?logo=tailwindcss&logoColor=38bdf8)
+![Express](https://img.shields.io/badge/Express_5-000?logo=express&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-023430?logo=mongodb&logoColor=47a248)
+![Razorpay](https://img.shields.io/badge/Razorpay-0c2451?logo=razorpay&logoColor=3395ff)
+![Vercel](https://img.shields.io/badge/Vercel-000?logo=vercel&logoColor=white)
 
-The frontend is a Next.js app and the backend is an Express API with MongoDB. Images are generated with the ClipDrop text-to-image API.
+[Demo](#demo) · [Architecture](#architecture) · [Engineering highlights](#engineering-highlights) · [API](#api) · [Run locally](#run-locally)
 
-## What it does
+<img src="docs/screenshots/demo.gif" alt="Generating two images in the Imagify studio" width="900">
 
-- Generates 1024 × 1024 images from a text prompt (up to 1,000 characters)
-- Optional style presets (Photo, 3D, Anime, Watercolor, Cinematic), prompt ideas and a "Surprise me" button
-- Download the image, copy the prompt, or start over in one click
-- Keeps your last 12 images from the current session so you can go back and download them
-- Credit system: 5 free credits on sign-up, 1 credit per image, and you're only charged when an image actually generates
-- Credit packs paid through Razorpay, verified on the server before credits are added
-- Sign up and log in with email and password (JWT sessions, bcrypt hashed passwords)
-- Works on phones, tablets and desktop
+</div>
 
-## Built with
+## At a glance
 
-**Frontend:** Next.js 16 (App Router), React 19, Tailwind CSS v4, shadcn/ui (Radix UI), Motion, Sonner, Lucide icons, Axios
+| | |
+| :--- | :--- |
+| **What it is** | A full-stack SaaS: landing page, auth, an image studio, a credit wallet and real payments |
+| **User flow** | Sign up → get 5 free credits → generate images (1 credit each) → buy a credit pack when you run out |
+| **Frontend** | Next.js 16 App Router, React 19, Tailwind CSS v4, shadcn/ui, Motion |
+| **Backend** | Node.js + Express 5 REST API, MongoDB (Mongoose), JWT auth, bcrypt |
+| **Integrations** | ClipDrop text-to-image API, Razorpay checkout (orders, signature verification, capture) |
+| **Hosting** | Two Vercel projects: Next.js frontend and the Express API as a serverless function |
 
-**Backend:** Node.js, Express 5, MongoDB with Mongoose, JWT, bcrypt, Razorpay, ClipDrop API
+## Demo
 
-## Folder layout
+| Landing page | Studio |
+| :---: | :---: |
+| <img src="docs/screenshots/home.png" alt="Landing page" width="440"> | <img src="docs/screenshots/studio.png" alt="Studio with a generated image and recent generations" width="440"> |
+| **Sign up (5 free credits)** | **Credit packs** |
+| <img src="docs/screenshots/sign-up.png" alt="Sign-up dialog" width="440"> | <img src="docs/screenshots/pricing.png" alt="Pricing page" width="440"> |
+
+<details>
+<summary><b>Mobile</b> (fully responsive)</summary>
+<br>
+<img src="docs/screenshots/mobile.png" alt="Home, studio and pricing on a phone" width="700">
+</details>
+
+**Studio features:** style presets (Photo, 3D, Anime, Watercolor, Cinematic), one-click prompt ideas and a "Surprise me" button, a live progress state, one-click PNG download, copy prompt, and the last 12 generations of the session.
+
+| Plan | Credits | Price (INR) | Per image |
+| :--- | ---: | ---: | ---: |
+| Free (on sign-up) | 5 | 0 | – |
+| Basic | 100 | ₹10 | ₹0.10 |
+| Advanced | 500 | ₹50 | ₹0.10 |
+| Business | 5,000 | ₹250 | ₹0.05 |
+
+## Architecture
+
+```mermaid
+flowchart LR
+    U([User]) --> FE
+
+    subgraph Vercel
+        FE["Next.js frontend<br/>App Router · shadcn/ui"]
+        API["Express API<br/>serverless function"]
+    end
+
+    FE -- "REST + JWT (token header)" --> API
+    FE -. "checkout.js modal" .-> RZ[(Razorpay)]
+    API -- "users, transactions" --> DB[(MongoDB Atlas)]
+    API -- "prompt → PNG" --> CD[ClipDrop API]
+    API -- "create order · verify · capture" --> RZ
+```
+
+The browser never talks to ClipDrop and never decides how many credits it has: **the API owns credits, prices and payment verification.** The frontend only renders what the API returns.
+
+### Generating an image
+
+Credits are reserved *before* the paid ClipDrop call and refunded if it fails, so users are never charged for a failed image and parallel requests can't overspend.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as Browser
+    participant A as Express API
+    participant M as MongoDB
+    participant C as ClipDrop
+
+    B->>A: POST /api/image/generate-image { prompt }
+    A->>A: Verify JWT, validate prompt (≤ 1000 chars)
+    A->>M: findOneAndUpdate(credits > 0, $inc -1)
+    alt no credits left
+        M-->>A: null
+        A-->>B: "Insufficient credits" → redirect to /buy
+    else credit reserved
+        A->>C: text-to-image (60 s timeout)
+        alt success
+            C-->>A: PNG bytes
+            A-->>B: base64 image + new balance
+        else ClipDrop error or timeout
+            A->>M: $inc +1 (refund)
+            A-->>B: friendly error (400 / 503 / 504)
+        end
+    end
+```
+
+### Buying credits
+
+The client never says how much it paid. The server picks the price, then checks Razorpay's signature *and* re-reads the order and payment from Razorpay before adding credits, exactly once.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as Browser
+    participant A as Express API
+    participant M as MongoDB
+    participant R as Razorpay
+
+    B->>A: POST /api/user/pay-razor { planId }
+    A->>M: create Transaction (payment: false)
+    A->>R: orders.create(server-side price)
+    A-->>B: order
+    B->>R: Razorpay checkout modal
+    R-->>B: payment_id, order_id, signature
+    B->>A: POST /api/user/verify-razor
+    A->>A: HMAC-SHA256 signature check (timing-safe)
+    A->>R: fetch order + payment, compare amounts
+    A->>R: capture (if only authorized)
+    A->>M: flip payment false → true (atomic)
+    A->>M: $inc credits
+    A-->>B: new balance
+```
+
+### Data model
+
+```mermaid
+erDiagram
+    USER ||--o{ TRANSACTION : "buys"
+    USER {
+        string name
+        string email "unique, lowercased"
+        string password "bcrypt hash"
+        number creditBalance "default 5, min 0"
+    }
+    TRANSACTION {
+        string userId
+        string plan "Basic | Advanced | Business"
+        number amount
+        number credits
+        boolean payment "false until verified"
+        string orderId "Razorpay order"
+    }
+```
+
+## Engineering highlights
+
+**Money and credits**
+- **No double spending.** Credits are deducted with one atomic, conditional `findOneAndUpdate`, so ten parallel requests with one credit produce one image, not ten.
+- **Failed generations are free.** The reserved credit is refunded on any ClipDrop error or timeout.
+- **Server-side pricing.** Plans live in `server/controllers/user.controller.js`; the client only sends a plan id (checked with `Object.hasOwn`, so `__proto__` style keys can't slip through). The list in `client/src/assets/assets.js` is display-only and must be kept in sync.
+- **Payment verification in depth.** Timing-safe HMAC signature check, then the order and payment are fetched from Razorpay and the amounts compared. Authorized-but-uncaptured payments are captured so customers are never charged without receiving credits.
+- **Idempotent crediting.** A transaction flips from unpaid to paid atomically, so retries or duplicate callbacks add credits only once.
+
+**Security**
+- bcrypt-hashed passwords, JWTs with expiry, and clean handling of expired sessions on the client.
+- NoSQL injection guard: login inputs must be strings, so payloads like `{ "$ne": null }` are rejected.
+- Same error for unknown email and wrong password, so accounts can't be probed.
+- 10 KB JSON body limit, CORS allowlist via `CLIENT_URL`, and no stack traces or internal errors sent to clients.
+
+**Frontend**
+- Generated images are converted from base64 to Blob URLs (about half the memory, instant downloads) and revoked when they leave history.
+- Hydration-safe auth state, so the server render and first client render always match.
+- The build fails fast if `NEXT_PUBLIC_BACKEND_URL` is missing or points to localhost on Vercel, instead of shipping a site that can't reach its API.
+
+## API
+
+| Method | Endpoint | Body | Purpose | Auth |
+| :--- | :--- | :--- | :--- | :---: |
+| `POST` | `/api/user/register` | `name`, `email`, `password` | Create an account (password ≥ 8 chars, gets 5 credits) | |
+| `POST` | `/api/user/login` | `email`, `password` | Log in, returns a JWT | |
+| `GET` | `/api/user/credits` | | Current credit balance | ✅ |
+| `POST` | `/api/image/generate-image` | `prompt` | Generate an image from a prompt | ✅ |
+| `POST` | `/api/user/pay-razor` | `planId` (`Basic`, `Advanced`, `Business`) | Create a Razorpay order for a plan | ✅ |
+| `POST` | `/api/user/verify-razor` | `razorpay_order_id`, `razorpay_payment_id`, `razorpay_signature` | Verify the payment and add credits | ✅ |
+
+Authenticated routes expect the JWT in a `token` header. All responses are JSON shaped as `{ success, message, ... }`, and request bodies are limited to 10 KB.
+
+## Project structure
 
 ```text
 Imagify/
-├── client/                 Next.js frontend
+├── client/                  Next.js frontend
 │   └── src/
-│       ├── app/            Pages: home (/), studio (/result), pricing (/buy), 404 and error pages
-│       ├── App.jsx         App shell: navbar, footer and the lazy-loaded sign-in dialog
-│       ├── components/     Navbar, sign-in dialog, studio, pricing and the home page sections
-│       │   └── ui/         shadcn/ui components
-│       ├── context/        App state: login, credits, generated images
-│       ├── lib/            API helpers, price formatting, Razorpay loader
-│       └── assets/         Images, plans, prompt ideas, style presets
-│
-└── server/                 Express API
-    ├── config/             MongoDB connection
-    ├── controllers/        Users, images and payments
-    ├── middlewares/        Checks the login token
-    ├── models/             User and Transaction schemas
-    ├── routes/             API routes
-    ├── utils/              Shared error response helper
-    ├── vercel.json         Vercel serverless config
-    └── server.js           Entry point
+│       ├── app/             Routes: / (home), /result (studio), /buy (pricing), error + 404
+│       ├── components/      Navbar, auth dialog, studio, pricing, landing sections, ui/ (shadcn)
+│       ├── context/         AppContext: session, credits, generation history
+│       └── lib/             API helpers, Razorpay loader, formatting
+└── server/                  Express API
+    ├── controllers/         User/payment and image logic
+    ├── middlewares/         JWT auth
+    ├── models/              User, Transaction
+    ├── routes/              /api/user, /api/image
+    └── server.js            App setup, CORS, error handling
 ```
 
-## Running it locally
+## Run locally
 
-You'll need Node.js 20.9 or newer, a MongoDB database (MongoDB Atlas works fine), a [ClipDrop](https://clipdrop.co/apis) API key and [Razorpay](https://dashboard.razorpay.com/) test keys.
-
-### 1. Get the code
+**Prerequisites:** Node.js 20.9+, a MongoDB database (Atlas free tier works), a [ClipDrop API key](https://clipdrop.co/apis), and [Razorpay test keys](https://dashboard.razorpay.com/app/keys).
 
 ```bash
 git clone https://github.com/Navraj86/Imagify.git
 cd Imagify
-```
 
-### 2. Start the backend
+# API → http://localhost:4000
+cd server && npm install && cp .env.example .env   # fill in .env
+npm run dev
 
-```bash
-cd server
-npm install
-cp .env.example .env
-```
-
-Fill in `server/.env`:
-
-```env
-PORT=4000
-# The "imagify" database is selected automatically, so no database name is needed in the URI
-MONGODB_URI=your_mongodb_connection_string
-JWT_SECRET=any_long_random_string
-JWT_EXPIRES_IN=7d
-
-CLIPDROP_API=your_clipdrop_api_key
-
-RAZORPAY_KEY_ID=your_razorpay_key_id
-RAZORPAY_KEY_SECRET=your_razorpay_key_secret
-CURRENCY=INR
-
-# Optional. Only these frontend URLs can call the API (comma separated). Unset allows any origin.
-CLIENT_URL=http://localhost:3000
-```
-
-Then run it:
-
-```bash
-npm run dev     # restarts on file changes
-# or
-npm start
-```
-
-The API runs on `http://localhost:4000`.
-
-### 3. Start the frontend
-
-In a second terminal:
-
-```bash
-cd client
-npm install
-cp .env.example .env
-```
-
-Fill in `client/.env`:
-
-```env
-NEXT_PUBLIC_BACKEND_URL=http://localhost:4000
-NEXT_PUBLIC_RAZORPAY_KEY_ID=your_razorpay_key_id
-NEXT_PUBLIC_CURRENCY=INR
-```
-
-`NEXT_PUBLIC_CURRENCY` should match `CURRENCY` on the server, because that's the currency Razorpay actually charges in.
-
-```bash
+# Frontend → http://localhost:3000 (second terminal)
+cd client && npm install && cp .env.example .env   # fill in .env
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+<details>
+<summary><b>Environment variables</b></summary>
 
-## Plans
+**`server/.env`**
 
-| Plan | Credits | Price (INR) |
-| :--- | ---: | ---: |
-| Free (on sign-up) | 5 | 0 |
-| Basic | 100 | 10 |
-| Advanced | 500 | 50 |
-| Business | 5,000 | 250 |
+| Variable | Description |
+| :--- | :--- |
+| `PORT` | API port, default `4000` |
+| `MONGODB_URI` | MongoDB connection string (the `imagify` database is selected automatically) |
+| `JWT_SECRET` | Any long random string |
+| `JWT_EXPIRES_IN` | Session length, e.g. `7d` |
+| `CLIPDROP_API` | ClipDrop API key |
+| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | Razorpay keys (use `rzp_test_` keys locally) |
+| `CURRENCY` | Currency Razorpay charges in, e.g. `INR` |
+| `CLIENT_URL` | Optional. Comma-separated frontend URLs allowed by CORS |
 
-Prices live in `server/controllers/user.controller.js` and that's what gets charged. The list in `client/src/assets/assets.js` is only for display, so keep the two in sync if you change them.
+**`client/.env`**
 
-## How credits and payments work
+| Variable | Description |
+| :--- | :--- |
+| `NEXT_PUBLIC_BACKEND_URL` | API URL, e.g. `http://localhost:4000` |
+| `NEXT_PUBLIC_RAZORPAY_KEY_ID` | Same key id as the server |
+| `NEXT_PUBLIC_CURRENCY` | Must match `CURRENCY` on the server |
 
-**Generating an image**
+</details>
 
-1. The server takes 1 credit in a single atomic update that only succeeds if your balance is above 0. Two requests sent at the same time can't spend the same credit.
-2. It sends the prompt to ClipDrop (60 second timeout).
-3. If ClipDrop fails or times out, the credit is refunded.
-4. The image comes back as a base64 PNG. Nothing is stored on the server, which is why the history only lasts for the current session.
+<details>
+<summary><b>Testing payments</b></summary>
 
-**Buying credits**
+With `rzp_test_` keys no real money moves, and the pricing page shows a test-mode notice.
 
-1. `pay-razor` saves a pending transaction and creates a Razorpay order for the plan's price.
-2. Razorpay checkout opens in the browser.
-3. `verify-razor` checks Razorpay's HMAC signature, then fetches the order and payment from Razorpay to confirm the amounts match.
-4. If the payment is only authorized, the server captures it.
-5. The transaction is flipped to paid in one atomic update, so retrying the request can never add the credits twice.
+1. Open **Pricing** and pick a plan.
+2. In the Razorpay window choose **Netbanking** and any bank.
+3. On the demo bank page click **Success** (or **Failure** to see a declined payment).
 
-## Testing payments
+Razorpay's [Indian test cards](https://razorpay.com/docs/payments/payments/test-card-details/) also work.
+</details>
 
-If you use Razorpay test keys (they start with `rzp_test_`), no real money is taken and the pricing page shows a test mode notice.
+<details>
+<summary><b>Deploying to Vercel</b></summary>
 
-1. Go to Pricing and pick a plan.
-2. In the Razorpay window, choose **Netbanking** and any bank.
-3. On Razorpay's demo bank page, click **Success**. Click **Failure** instead if you want to see what a declined payment looks like.
+Create two Vercel projects from this repo:
 
-Razorpay's [Indian test cards](https://razorpay.com/docs/payments/payments/test-card-details/) work too. International cards get declined unless you turn them on in your Razorpay dashboard.
+- **API:** root directory `server` (a `vercel.json` is included). Add the server variables and set `CLIENT_URL` to the frontend URL.
+- **Frontend:** root directory `client`. Add the three `NEXT_PUBLIC_` variables, with `NEXT_PUBLIC_BACKEND_URL` set to the deployed API.
 
-## API
+`NEXT_PUBLIC_` values are baked in at build time, so redeploy the frontend after changing them.
+</details>
 
-| Method | Endpoint | Body | What it does | Login needed |
-| :--- | :--- | :--- | :--- | :---: |
-| `POST` | `/api/user/register` | `name`, `email`, `password` | Create an account (password at least 8 characters) | No |
-| `POST` | `/api/user/login` | `email`, `password` | Log in and get a token | No |
-| `GET` | `/api/user/credits` | | Get the current credit balance | Yes |
-| `POST` | `/api/image/generate-image` | `prompt` | Generate an image from a prompt | Yes |
-| `POST` | `/api/user/pay-razor` | `planId` (`Basic`, `Advanced` or `Business`) | Start a credit pack purchase | Yes |
-| `POST` | `/api/user/verify-razor` | `razorpay_order_id`, `razorpay_payment_id`, `razorpay_signature` | Confirm the payment and add credits | Yes |
+## Roadmap
 
-For the routes that need a login, send the token in a `token` header.
-
-Every response is JSON with a `success` flag and a `message` when something goes wrong. Request bodies are limited to 10 KB.
-
-## Deploying
-
-Both parts can go on Vercel as two separate projects.
-
-**Backend:** import the repo with the root directory set to `server`. It already has a `vercel.json`, and `server.js` exports the Express app so it runs as a serverless function. Add everything from `server/.env.example` as environment variables, and set `CLIENT_URL` to your frontend's URL.
-
-**Frontend:** import the repo again with the root directory set to `client`. Vercel picks up Next.js on its own. Add the three `NEXT_PUBLIC_` variables, with `NEXT_PUBLIC_BACKEND_URL` set to your deployed backend URL (not localhost).
-
-`NEXT_PUBLIC_` values are baked in when the site builds. If you add or change one, redeploy the frontend for it to take effect. The build stops with an error if `NEXT_PUBLIC_BACKEND_URL` is missing or points at localhost on Vercel, so you won't accidentally ship a site that can't reach the API.
-
-## Contributing
-
-Issues and pull requests are welcome. If you want to change something big, open an issue first so we can talk about it.
+- Razorpay webhook as a backup to the browser callback, so credits still land if the tab closes mid-payment
+- Store images in object storage (S3 / R2) and keep a per-user gallery instead of session-only history
+- Rate limiting on auth and generation endpoints
+- Automated tests for the credit and payment flows
 
 ## License
 
